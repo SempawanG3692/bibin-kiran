@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>ElectroShop — Electronics Catalogue</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="nav-brand">
+        <div class="brand-icon">⚡</div>
+        <h1>ElectroShop</h1>
+    </div>
+    <div class="nav-actions">
+        <button class="btn-cart" onclick="showCart()">🛒 Cart <span id="cartCount">0</span></button>
+        <button class="btn-orders" onclick="showOrders()">📋 Orders</button>
+        <button class="btn-graph" onclick="showGraph()">📊 Graph</button>
+    </div>
+</nav>
+
+<!-- MAIN PAGE -->
+<div id="mainPage">
+    <div class="hero">
+        <div class="hero-title">Find Your Perfect Tech</div>
+        <div class="hero-sub">Your one-stop shop for electronics</div>
+        <div class="search-sort-row">
+            <div class="search-wrap">
+                <input type="text" id="search" placeholder="Search products..." oninput="applyFilters()" />
+            </div>
+            <select id="sortSelect" onchange="applyFilters()">
+                <option value="default">Sort By</option>
+                <option value="low-high">Price: Low to High</option>
+                <option value="high-low">Price: High to Low</option>
+                <option value="name-az">Name: A to Z</option>
+                <option value="name-za">Name: Z to A</option>
+            </select>
+        </div>
+    </div>
+    <div id="categoryBar" class="category-bar"></div>
+    <div class="section-title">All Products</div>
+    <div id="products"></div>
+</div>
+
+<!-- CART PAGE -->
+<div id="cartPage" style="display:none;">
+    <div class="page-header">
+        <h2>Your Cart 🛒</h2>
+        <p>Review your items before checkout</p>
+    </div>
+    <div id="cartItems"></div>
+    <div class="cart-footer">
+        <div class="cart-total">Total: ₹<span id="totalPrice">0</span></div>
+        <button class="btn-buy" onclick="showCheckoutForm()">Proceed to Checkout →</button>
+        <br>
+        <button class="btn-back" onclick="goBack()">⬅ Back</button>
+    </div>
+</div>
+
+<!-- ORDER HISTORY PAGE -->
+<div id="ordersPage" style="display:none;">
+    <div class="page-header">
+        <h2>Order History 📋</h2>
+        <p>All your past purchases</p>
+    </div>
+    <div id="orderSummary" class="order-summary"></div>
+    <div id="orderList"></div>
+    <div style="text-align:center; padding-bottom:20px;">
+        <button class="btn-back" onclick="goBack()">⬅ Back</button>
+    </div>
+</div>
+
+<!-- GRAPH PAGE -->
+<div id="graphPage" style="display:none;">
+    <div class="page-header">
+        <h2>Sales Analytics 📊</h2>
+        <p>Your order history at a glance</p>
+    </div>
+    <div class="chart-container">
+        <canvas id="cartChart"></canvas>
+    </div>
+    <div style="text-align:center; padding:20px;">
+        <button class="btn-back" onclick="goBack()">⬅ Back</button>
+    </div>
+</div>
+
+<!-- CHECKOUT FORM POPUP -->
+<div id="checkoutOverlay" class="checkout-overlay" onclick="closeCheckoutOutside(event)">
+    <div class="checkout-box" id="checkoutBox">
+
+        <!-- STEP 1: FORM -->
+        <div id="checkoutStep1">
+            <div class="checkout-header">
+                <h2>Checkout 🛍️</h2>
+                <span class="close" onclick="closeCheckout()">×</span>
+            </div>
+
+            <div class="checkout-summary-mini" id="checkoutSummaryMini"></div>
+
+            <form id="checkoutForm" onsubmit="submitCheckout(event)">
+
+                <div class="form-section-label">👤 Personal Details</div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="cf-name" placeholder="John Doe" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="cf-email" placeholder="john@email.com" required />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number *</label>
+                    <input type="tel" id="cf-phone" placeholder="+91 98765 43210" required />
+                </div>
+
+                <div class="form-section-label">🏠 Delivery Address</div>
+
+                <div class="form-group">
+                    <label>Street Address *</label>
+                    <input type="text" id="cf-street" placeholder="123 Main Street, Apt 4B" required />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City *</label>
+                        <input type="text" id="cf-city" placeholder="Chennai" required />
+                    </div>
+                    <div class="form-group">
+                        <label>PIN Code *</label>
+                        <input type="text" id="cf-pin" placeholder="600001" required />
+                    </div>
+                </div>
+
+                <div class="form-section-label">💳 Payment Method</div>
+
+                <div class="payment-options">
+                    <label class="payment-option">
+                        <input type="radio" name="payment" value="Cash on Delivery" checked />
+                        <span class="payment-label">
+                            <span class="payment-icon">💵</span>
+                            <span>
+                                <strong>Cash on Delivery</strong>
+                                <small>Pay when your order arrives</small>
+                            </span>
+                        </span>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="payment" value="UPI" />
+                        <span class="payment-label">
+                            <span class="payment-icon">📱</span>
+                            <span>
+                                <strong>UPI</strong>
+                                <small>GPay, PhonePe, Paytm</small>
+                            </span>
+                        </span>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="payment" value="Credit/Debit Card" />
+                        <span class="payment-label">
+                            <span class="payment-icon">💳</span>
+                            <span>
+                                <strong>Credit / Debit Card</strong>
+                                <small>Visa, Mastercard, RuPay</small>
+                            </span>
+                        </span>
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="payment" value="Net Banking" />
+                        <span class="payment-label">
+                            <span class="payment-icon">🏦</span>
+                            <span>
+                                <strong>Net Banking</strong>
+                                <small>All major banks supported</small>
+                            </span>
+                        </span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-confirm" id="confirmBtn">
+                    Place Order 🎉
+                </button>
+
+            </form>
+        </div>
+
+        <!-- STEP 2: SUCCESS -->
+        <div id="checkoutStep2" style="display:none;">
+            <div class="success-screen">
+                <div class="success-icon">✅</div>
+                <h2>Order Placed!</h2>
+                <p class="success-sub">Thank you for shopping with ElectroShop!</p>
+                <div id="successDetails" class="success-details"></div>
+                <button class="btn-confirm" onclick="closeCheckout(); goBack();">Continue Shopping 🛍️</button>
+                <button class="btn-back" style="margin-top:10px;" onclick="closeCheckout(); showOrders();">View Orders 📋</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- PRODUCT POPUP -->
+<div id="popup" onclick="closePopupOutside(event)">
+    <div id="popup-content"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
